@@ -14,102 +14,112 @@ public class Player : MonoBehaviour
     [SerializeField] private Vector2 groundCastSize;
     [SerializeField] private float enemyCastDistance;
     [SerializeField] private Vector2 enemyCastSize;
+    [SerializeField] private GameObject dashEffectPrefeb;
 
-    public float MoveSpeed { get { return moveSpeed; } }
-    public float JumpPower { get { return jumpPower; } }
-    public int JumpAmount { get { return jumpAmount; } }
-    public int DashAmount { get { return dashAmount; } }
-
-    [SerializeField] SpriteRenderer spriteRenderer;
+    SpriteRenderer spriteRenderer;
     Rigidbody2D rigidbody2D;
 
     int jumpCount;
+    int lookDir;
+    int dashCount;
+    float dashCooltime = 0;
+    bool isDash = false;
+    bool canMove = true;
+    
 
     void Start()
     {
-        if(Instance == null)
+        if (Instance == null)
             Instance = this;
         else
             Destroy(this);
 
         rigidbody2D = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
-        jumpCount = jumpAmount; 
+        jumpCount = jumpAmount;
+        dashCount = dashAmount;
     }
 
     void Update()
     {
+        lookDir = (spriteRenderer.flipX ? -1 : 1);
         bool hitGround = Physics2D.BoxCast(transform.position, groundCastSize, 0f, Vector2.down, groundCastDistance, LayerMask.GetMask("Ground"));
-        RaycastHit2D[] EnemyHit = Physics2D.BoxCastAll(transform.position, enemyCastSize, 0f, Vector2.right *(spriteRenderer.flipX ? -1 : 1), enemyCastDistance);
+        RaycastHit2D[] EnemyHit = Physics2D.BoxCastAll(transform.position, enemyCastSize, 0f, Vector2.right * lookDir, enemyCastDistance);
 
-        if(Input.GetButton("Horizontal"))
+        if (canMove)
         {
-            rigidbody2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * moveSpeed, rigidbody2D.velocity.y);
-            spriteRenderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
-        }
-        else if(Input.GetButtonUp("Horizontal"))
-        {
-            rigidbody2D.velocity = new Vector2(0, rigidbody2D.velocity.y);
-        }
-
-        if(Input.GetKeyDown(KeyCode.Space) && jumpCount > 0)
-        {
-            rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x, jumpPower);
-        }
-        else if(Input.GetKeyUp(KeyCode.Space))
-        {
-            jumpCount -= 1;
-        }
-        else if(hitGround)
-        {
-            jumpCount = jumpAmount;
-        }
-
-        foreach(RaycastHit2D hit in EnemyHit)
-        {
-            if(hit.collider.CompareTag("Enemy"))
+            if (Input.GetButton("Horizontal"))
             {
-
+                rigidbody2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * moveSpeed, rigidbody2D.velocity.y);
+                spriteRenderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
             }
-            
-            if(hit.collider.CompareTag("Boss"))
+            if (Input.GetButtonUp("Horizontal"))
             {
-
+                rigidbody2D.velocity = new Vector2(0, rigidbody2D.velocity.y);
             }
-        }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && dashAmount > 0)//좌쉬프트 누르면 대쉬하게
-        {
-            if (canDash)
+            if (Input.GetKeyDown(KeyCode.UpArrow) && jumpCount > 0)
             {
+                rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x, jumpPower);
+            }
+            else if (Input.GetKeyUp(KeyCode.UpArrow))
+            {
+                jumpCount -= 1;
+            }
+            else if (hitGround)
+            {
+                jumpCount = jumpAmount;
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftShift) && dashCount > 0 && isDash != true)//좌쉬프트 누르면 대쉬하게
+            {
+                dashCount--;
                 StartCoroutine(Dash());
-                dashAmount--;
+            }
+
+            if(dashCount < dashAmount)
+            {
+                dashCooltime += Time.deltaTime;
+                if(dashCooltime > 4)
+                {
+                    dashCount += 1;
+                    dashCooltime = 0;
+                }
             }
         }
+
+
+        foreach (RaycastHit2D hit in EnemyHit)
+        {
+            if (hit.collider.CompareTag("Enemy"))
+            {
+
+            }
+
+            if (hit.collider.CompareTag("Boss"))
+            {
+
+            }
+        }
+
     }
 
-    IEnumerator Dash() //대쉬
+    IEnumerator Dash()
     {
         canMove = false;
-        canDash = false;
-        Vector3 mousePos = .ScreenToWorldPoint(Input.mousePosition); //마우스의 위치를 월드위치로 변환
-        Vector2 target = new Vector2(mousePos.x - transform.position.x, mousePos.y - transform.position.y); //방향을 정함
-        rigidbody2D.velocity = Vector2.zero;
         isDash = true;
-        for (int i = 0; i < 5; i++) //방향으로 움직임
+        for (int i = 0; i < 5; i++)
         {
-            RaycastHit2D isGroundHit = Physics2D.BoxCast(transform.position, new Vector2(0.9f, 0.9f), 0f, Vector2.up, 0f, LayerMask.GetMask("Ground"));
-            if (isGroundHit.collider != null)
-                break;
-            ObjectPool.GetObject(ObjectPool.instance.prefebs[2], null);
-            rigidbody2D.position = rigidbody2D.position + target.normalized * dashSpeed;
-            yield return new WaitForFixedUpdate();
+            transform.Translate(new Vector3(lookDir, 0, 0));
+            var dashEffect = Instantiate(dashEffectPrefeb, transform.position, Quaternion.identity);
+            dashEffect.GetComponent<SpriteRenderer>().sprite = spriteRenderer.sprite;
+            yield return new WaitForSeconds(0.005f);
         }
-        rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x, 0);
-        isDash = false;
         canMove = true;
-        canDash = true;
+        isDash = false;
     }
+
 
     private void OnDrawGizmos()
     {
@@ -117,6 +127,6 @@ public class Player : MonoBehaviour
         Gizmos.DrawWireCube(new Vector2(transform.position.x, transform.position.y - groundCastDistance), groundCastSize);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(new Vector2(transform.position.x + (spriteRenderer.flipX ? -1 : 1) * enemyCastDistance, transform.position.y), enemyCastSize);
+        Gizmos.DrawWireCube(new Vector2(transform.position.x + lookDir * enemyCastDistance, transform.position.y), enemyCastSize);
     }
 }

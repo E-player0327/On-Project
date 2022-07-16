@@ -16,7 +16,6 @@ public class Boss : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 
     IEnumerator NormalPattern1()
@@ -47,9 +46,9 @@ public class Boss : MonoBehaviour
         leftarm.transform.DOMove(new Vector2(-6.0f, -2f), 0.3f).SetEase(Ease.Unset);
         rightarm.transform.DOMove(new Vector2(6.0f, -2f), 0.3f).SetEase(Ease.Unset);
         yield return new WaitForSeconds(0.3f);
-        leftarm.transform.DOMove(new Vector2(-1.5f, -2f), 0.3f).SetEase(Ease.InCubic);
-        rightarm.transform.DOMove(new Vector2(1.5f, -2f), 0.3f).SetEase(Ease.InCubic);
-        yield return new WaitForSeconds(0.4f);
+        leftarm.transform.DOMove(new Vector2(-1f, -2f), 0.3f).SetEase(Ease.InCubic);
+        rightarm.transform.DOMove(new Vector2(1f, -2f), 0.3f).SetEase(Ease.InCubic);
+        yield return new WaitForSeconds(0.3f);
         leftarm.transform.DOMove(new Vector2(-3f, -2f), 0.5f).SetEase(Ease.Unset);
         rightarm.transform.DOMove(new Vector2(3f, -2f), 0.5f).SetEase(Ease.Unset);
         CameraShake.instance.smoothShakeCamera(5, 0.5f);
