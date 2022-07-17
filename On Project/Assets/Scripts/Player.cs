@@ -10,19 +10,27 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpPower;
     [SerializeField] private int jumpAmount;
     [SerializeField] private int dashAmount;
+    [SerializeField] private float dashChargeTime;
+    [SerializeField] private int hp;
     [SerializeField] private float groundCastDistance;
     [SerializeField] private Vector2 groundCastSize;
     [SerializeField] private float enemyCastDistance;
     [SerializeField] private Vector2 enemyCastSize;
     [SerializeField] private GameObject dashEffectPrefeb;
+    [SerializeField] private GameObject HpBar;
+
+    public int Hp { get { return hp; } }
+    public int DashAmount { get { return dashAmount; } }
+    public float DashChargeTime { get { return dashChargeTime; } }
 
     SpriteRenderer spriteRenderer;
     Rigidbody2D rigidbody2D;
 
     int jumpCount;
     int lookDir;
-    int dashCount;
-    float dashCooltime = 0;
+    public int currentDashAmount { get; private set; }
+    public int currentHp { get; private set; }
+    public float currentDashChargeTime { get; private set; }
     bool isDash = false;
     bool canMove = true;
     
@@ -37,8 +45,10 @@ public class Player : MonoBehaviour
         rigidbody2D = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
 
+        dashAmount = 4;
         jumpCount = jumpAmount;
-        dashCount = dashAmount;
+        currentDashAmount = dashAmount;
+        currentHp = hp;
     }
 
     void Update()
@@ -72,19 +82,19 @@ public class Player : MonoBehaviour
                 jumpCount = jumpAmount;
             }
 
-            if (Input.GetKeyDown(KeyCode.LeftShift) && dashCount > 0 && isDash != true)//좌쉬프트 누르면 대쉬하게
+            if (Input.GetKeyDown(KeyCode.LeftShift) && currentDashAmount > 0 && isDash != true)//좌쉬프트 누르면 대쉬하게
             {
-                dashCount--;
+                currentDashAmount--;
                 StartCoroutine(Dash());
             }
 
-            if(dashCount < dashAmount)
+            if(currentDashAmount < dashAmount)
             {
-                dashCooltime += Time.deltaTime;
-                if(dashCooltime > 4)
+                currentDashChargeTime += Time.deltaTime;
+                if(currentDashChargeTime > dashChargeTime)
                 {
-                    dashCount += 1;
-                    dashCooltime = 0;
+                    currentDashAmount += 1;
+                    currentDashChargeTime = 0;
                 }
             }
         }
