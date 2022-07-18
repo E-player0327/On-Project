@@ -253,7 +253,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.007852039, y: -0.40432, z: -9.98}
+  m_LocalPosition: {x: -0.007852039, y: -0.40432, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1302,7 +1302,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1143828052}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.89, z: 0.02}
+  m_LocalPosition: {x: 0, y: -1.89, z: 0}
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1870,12 +1870,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hp: 1000
-  lasertime: 1
+  lasertime: 0.7
   head: {fileID: 702764035}
   body: {fileID: 2115296710}
   leftarm: {fileID: 1167349587}
   rightarm: {fileID: 520099189}
   laser: {fileID: 1918663318}
+  fireball: {fileID: 1622573557512767715, guid: 99d29b599dbe1ef48be37c07c9d23370, type: 3}
 --- !u!1 &1811884908
 GameObject:
   m_ObjectHideFlags: 0
@@ -2128,7 +2129,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1866319498}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.89, z: -9.98}
+  m_LocalPosition: {x: 0, y: -1.89, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2358,7 +2359,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.30188265
+        value: 0.54716766
         inSlope: Infinity
         outSlope: Infinity
         tangentMode: 1

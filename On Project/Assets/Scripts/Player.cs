@@ -142,4 +142,12 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(new Vector2(transform.position.x + lookDir * enemyCastDistance, transform.position.y), enemyCastSize);
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.CompareTag("Fireball"))
+        {
+            currentHp -= 10;
+        }
+    }
 }
