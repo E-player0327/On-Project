@@ -5,12 +5,18 @@ using DG.Tweening;
 
 public class Boss : MonoBehaviour
 {
+    [SerializeField] int hp;
+    [SerializeField] float lasertime;
     [SerializeField] GameObject head;
     [SerializeField] GameObject body;
     [SerializeField] GameObject leftarm; //-6, 0
     [SerializeField] GameObject rightarm; //6, 0
     [SerializeField] GameObject laser;
-    [SerializeField] float lasertime;
+
+    public int Hp { get { return hp; } }
+
+    public int currentHp { get; private set; }
+    bool isAttack = false;
 
     Animator headAnimator;
     Animator bodyAnimator;
@@ -25,18 +31,26 @@ public class Boss : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(NormalPattern1());
+        currentHp = hp;
+        bodyAnimator.Play("body-idle");
     }
 
+
+    private void Update()
+    {
+        if (currentHp > 0 && isAttack != true)
+            StartCoroutine(NormalPattern1());
+    }
 
 
     IEnumerator NormalPattern1()
     {
-        bodyAnimator.Play("body-idle");
-        headAnimator.Play("head-idle");
+        isAttack = true;
+        bodyAnimator.enabled = true;
+        head.GetComponent<HeadAnimation>().isHeadIdle = true;
         yield return new WaitForSeconds(1.0f);
         bodyAnimator.enabled = false;
-        headAnimator.enabled = false;
+        head.GetComponent<HeadAnimation>().isHeadIdle = false;
         leftarm.transform.DOMove(new Vector2(-7.07f, 0.82f), 0.5f).SetEase(Ease.OutCubic);
         body.transform.DOMove(new Vector2(-0.2f, 0.3f), 0.3f).SetEase(Ease.Unset);
         yield return new WaitForSeconds(0.5f);
@@ -56,11 +70,11 @@ public class Boss : MonoBehaviour
         rightarm.transform.DOMove(new Vector2(6f, 0f), 1f);
         body.transform.DOMove(Vector2.zero, 0.5f).SetEase(Ease.Unset);
         bodyAnimator.enabled = true;
-        headAnimator.enabled = true;
+        head.GetComponent<HeadAnimation>().isHeadIdle = true;
 
         yield return new WaitForSeconds(2);
         bodyAnimator.enabled = false;
-        headAnimator.enabled = false;
+        head.GetComponent<HeadAnimation>().isHeadIdle = false;
         leftarm.transform.DOMove(new Vector2(-6.0f, 2.0f), 0.5f).SetEase(Ease.OutCubic);
         rightarm.transform.DOMove(new Vector2(6.0f, 2.0f), 0.5f).SetEase(Ease.OutCubic);
         body.transform.DOMove(Vector2.up * 0.5f, 0.5f).SetEase(Ease.Unset);
@@ -80,7 +94,7 @@ public class Boss : MonoBehaviour
         leftarm.transform.DOMove(new Vector2(-3f, -2f), 0.5f).SetEase(Ease.Unset);
         rightarm.transform.DOMove(new Vector2(3f, -2f), 0.5f).SetEase(Ease.Unset);
         bodyAnimator.enabled = true;
-        headAnimator.enabled = true;
+        head.GetComponent<HeadAnimation>().isHeadIdle = true;
         CameraShake.instance.smoothShakeCamera(5, 0.5f);
         StartCoroutine(specialPattern1());
         yield return null;
@@ -91,24 +105,34 @@ public class Boss : MonoBehaviour
         float temp = -90;
         yield return new WaitForSeconds(2);
         bodyAnimator.enabled = false;
+        head.GetComponent<HeadAnimation>().isHeadIdle = false;
         body.transform.DOMove(Vector2.up * 1, 1f);
         leftarm.transform.DOMove(new Vector2(-6f, 0f), 1f);
         rightarm.transform.DOMove(new Vector2(6f, 0f), 1f);
+        head.transform.DOMove(Vector2.up * 2, 1f);
         headAnimator.Play("head-attack_open");
-        yield return new WaitForSeconds(2);
+        CameraShake.instance.shakeCamera(3, 1);
+        yield return new WaitForSeconds(1);
+        CameraShake.instance.smoothShakeCamera(5, 1);
+        yield return new WaitForSeconds(1);
+        CameraShake.instance.shakeCamera(7, 0.3f);
         for (float i = 0; i < lasertime; i += Time.fixedDeltaTime)
         {
             float radian = temp * Mathf.PI / 180;
             RaycastHit2D hit = Physics2D.Raycast(Vector2.up * 0.2f, new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized, Mathf.Infinity);
             Debug.DrawLine(Vector2.up * 0.2f, hit.point, Color.yellow);
             laserLineRenderer.enabled = true;
-            laserLineRenderer.SetPosition(0, Vector2.up * 0.2f);
+            laserLineRenderer.SetPosition(0, Vector2.up * 1.2f);
             laserLineRenderer.SetPosition(1, hit.point);
             temp += 7.2f / lasertime;
             yield return new WaitForFixedUpdate();
         }
         laserLineRenderer.enabled = false;
         headAnimator.Play("head-attack_close");
+        body.transform.DOMove(Vector2.zero, 1f);
+        head.transform.DOMove(Vector2.up, 1f);
+        yield return new WaitForSeconds(1f);
+        isAttack = false;
         yield return null;
     }
 }

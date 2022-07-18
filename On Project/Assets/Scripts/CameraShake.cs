@@ -25,7 +25,7 @@ public class CameraShake : MonoBehaviour
     public void shakeCamera(float _intensity, float _time)
     {
         cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = _intensity;
-        shakeTimer = time;
+        shakeTimer = _time;
         isSmoothShake = false;
     }
 
@@ -48,7 +48,7 @@ public class CameraShake : MonoBehaviour
                 cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = cinemachineBasicMultiChannelPerlin.m_AmplitudeGain - intensity / (50 * time) ;
             }
         }
-        if(shakeTimer <= 0)
+        else
         {
             cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = 0;
             intensity = 0;
