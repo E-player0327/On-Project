@@ -119,6 +119,8 @@ public class Player : MonoBehaviour
     {
         canMove = false;
         isDash = true;
+        rigidbody2D.gravityScale = 0;
+        rigidbody2D.velocity = Vector2.zero;
         for (int i = 0; i < 5; i++)
         {
             transform.Translate(new Vector3(lookDir, 0, 0));
@@ -128,6 +130,7 @@ public class Player : MonoBehaviour
         }
         canMove = true;
         isDash = false;
+        rigidbody2D.gravityScale = 3.5f;    
     }
 
 
