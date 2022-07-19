@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpPower;
+    [SerializeField] private float invincibleTime;
     [SerializeField] private int jumpAmount;
     [SerializeField] private int dashAmount;
     [SerializeField] private float dashChargeTime;
@@ -31,9 +32,13 @@ public class Player : MonoBehaviour
     public int currentDashAmount { get; private set; }
     public int currentHp { get; private set; }
     public float currentDashChargeTime { get; private set; }
+    public bool hitGround { get; private set; }
+    float currentInvincibleTime = 0;
+    float stunTime;
     bool isDash = false;
     bool canMove = true;
-    
+    bool isInvincible = false;
+
 
     void Start()
     {
@@ -54,7 +59,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         lookDir = (spriteRenderer.flipX ? -1 : 1);
-        bool hitGround = Physics2D.BoxCast(transform.position, groundCastSize, 0f, Vector2.down, groundCastDistance, LayerMask.GetMask("Ground"));
+        hitGround = Physics2D.BoxCast(transform.position, groundCastSize, 0f, Vector2.down, groundCastDistance, LayerMask.GetMask("Ground"));
         RaycastHit2D[] EnemyHit = Physics2D.BoxCastAll(transform.position, enemyCastSize, 0f, Vector2.right * lookDir, enemyCastDistance);
 
         if (canMove)
@@ -88,10 +93,21 @@ public class Player : MonoBehaviour
                 StartCoroutine(Dash());
             }
 
-            if(currentDashAmount < dashAmount)
+            if(Input.GetKeyDown(KeyCode.Z))
+            {
+                foreach(RaycastHit2D hit in EnemyHit)
+                {
+                    if (hit.collider.CompareTag("Core"))
+                    {
+                        Boss.instance.currentHp -= 10;
+                    }
+                }
+            }
+
+            if (currentDashAmount < dashAmount)
             {
                 currentDashChargeTime += Time.deltaTime;
-                if(currentDashChargeTime > dashChargeTime)
+                if (currentDashChargeTime > dashChargeTime)
                 {
                     currentDashAmount += 1;
                     currentDashChargeTime = 0;
@@ -99,20 +115,25 @@ public class Player : MonoBehaviour
             }
         }
 
-
-        foreach (RaycastHit2D hit in EnemyHit)
+        if (currentInvincibleTime > 0)
         {
-            if (hit.collider.CompareTag("Enemy"))
-            {
-
-            }
-
-            if (hit.collider.CompareTag("Boss"))
-            {
-
-            }
+            currentInvincibleTime -= Time.deltaTime;
+            isInvincible = true;
+            spriteRenderer.color = new Color(1, 1, 1, 0.5f);
+        }
+        else
+        {
+            isInvincible = false;
+            spriteRenderer.color = Color.white;
         }
 
+        if (stunTime > 0)
+        {
+            stunTime -= Time.deltaTime;
+            canMove = false;
+        }
+        else
+            canMove = true;
     }
 
     IEnumerator Dash()
@@ -130,7 +151,7 @@ public class Player : MonoBehaviour
         }
         canMove = true;
         isDash = false;
-        rigidbody2D.gravityScale = 3.5f;    
+        rigidbody2D.gravityScale = 3.5f;
     }
 
 
@@ -145,9 +166,29 @@ public class Player : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.CompareTag("Fireball"))
+        if (!isInvincible)
         {
-            currentHp -= 10;
+            if (collision.CompareTag("Fireball"))
+            {
+                Hurt(10);
+            }
+
+            if (collision.CompareTag("Hand") && Boss.instance.isAttack)
+            {
+                Hurt(20);
+            }
         }
+    }
+
+    public void Hurt(int damage)
+    {   
+        currentHp -= damage;
+        currentInvincibleTime = invincibleTime;
+        Stun(0.3f);
+    }
+
+    public void Stun(float time)
+    {
+        stunTime = time;
     }
 }

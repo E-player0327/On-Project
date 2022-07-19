@@ -13,10 +13,10 @@ public class Fireball : MonoBehaviour
         currentSpeed = startSpeed;
         Destroy(gameObject, 2);
     }
-    private void Update()
+    private void FixedUpdate()
     {
-        currentSpeed += 0.02f;
-        transform.Translate(Vector2.up * currentSpeed * Time.deltaTime);
+        currentSpeed = currentSpeed * 1.05f;
+        transform.Translate(Vector2.up * currentSpeed);
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {

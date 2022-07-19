@@ -5,6 +5,8 @@ using DG.Tweening;
 
 public class Boss : MonoBehaviour
 {
+    public static Boss instance { get; private set; }
+
     [SerializeField] int hp;
     [SerializeField] float lasertime;
     [SerializeField] GameObject head;
@@ -13,11 +15,13 @@ public class Boss : MonoBehaviour
     [SerializeField] GameObject rightarm; //6, 0
     [SerializeField] GameObject laser;
     [SerializeField] GameObject fireball;
+    [SerializeField] GameObject core;
 
     public int Hp { get { return hp; } }
 
-    public int currentHp { get; private set; }
-    bool isAttack = false;
+    public int currentHp { get; set; }
+    public bool isAttackCycle { get; private set; }
+    public bool isAttack { get; private set; }
 
     Animator headAnimator;
     Animator bodyAnimator;
@@ -25,6 +29,11 @@ public class Boss : MonoBehaviour
 
     private void Awake()
     {
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(gameObject);
+
         bodyAnimator = body.GetComponent<Animator>();
         headAnimator = head.GetComponent<Animator>();
         laserLineRenderer = laser.GetComponent<LineRenderer>();
@@ -33,28 +42,54 @@ public class Boss : MonoBehaviour
     void Start()
     {
         currentHp = hp;
-        bodyAnimator.Play("body-idle");
     }
 
 
     private void Update()
     {
-        if (currentHp > 0 && isAttack != true)
+        if (currentHp > 0 && isAttackCycle != true)
             StartCoroutine(NormalAttack());
     }
 
 
+    IEnumerator CoreOpen()
+    {
+        yield return new WaitForSeconds(0.7f);
+        isAttack = true;
+        leftarm.transform.DOMove(new Vector2(-6.0f, -2.5f), 0.6f).SetEase(Ease.OutBounce);
+        rightarm.transform.DOMove(new Vector2(6.0f, -2.5f), 0.6f).SetEase(Ease.OutBounce);
+        yield return new WaitForSeconds(0.3f);
+        isAttack = false;
+        CameraShake.instance.smoothShakeCamera(5, 1);
+        yield return new WaitForSeconds(0.7f);
+        bodyAnimator.enabled = true;
+        bodyAnimator.Play("body-core_open");
+        yield return new WaitForSeconds(1.5f);
+        core.SetActive(true);
+        yield return new WaitForSeconds(3.5f);
+        core.SetActive(false);
+        bodyAnimator.Play("body-core_close");
+        yield return new WaitForSeconds(1f);
+        leftarm.transform.DOMove(new Vector2(-6.0f, 0f), 1f).SetEase(Ease.OutCubic);
+        rightarm.transform.DOMove(new Vector2(6.0f, 0f), 1f).SetEase(Ease.OutCubic);
+        isAttackCycle = false;
+    }
+
     IEnumerator NormalAttack()
     {
-        isAttack = true;
+        isAttackCycle = true;
         bodyAnimator.enabled = true;
+        bodyAnimator.Play("body-idle");
+        head.GetComponent<HeadAnimation>().time = 0;
         head.GetComponent<HeadAnimation>().isHeadIdle = true;
         yield return new WaitForSeconds(1.0f);
         bodyAnimator.enabled = false;
         head.GetComponent<HeadAnimation>().isHeadIdle = false;
+
         leftarm.transform.DOMove(new Vector2(-7.07f, 0.82f), 0.5f).SetEase(Ease.OutCubic);
         body.transform.DOMove(new Vector2(-0.2f, 0.3f), 0.3f).SetEase(Ease.Unset);
         yield return new WaitForSeconds(0.5f);
+        isAttack = true;
         head.transform.DOMove(new Vector2(1.2f, 0.3f), 0.5f).SetEase(Ease.Unset);
         leftarm.transform.DOMove(new Vector2(1.5f, -2.5f), 0.5f).SetEase(Ease.InCubic);
         body.transform.DOMove(new Vector2(1f, -0.7f), 0.5f).SetEase(Ease.Unset);
@@ -74,12 +109,14 @@ public class Boss : MonoBehaviour
         rightarm.transform.DOMove(new Vector2(6f, 0f), 1f);
         body.transform.DOMove(Vector2.zero, 0.5f).SetEase(Ease.Unset);
         head.transform.DOMove(Vector2.up * 1.5f, 0.5f).SetEase(Ease.Unset);
+        isAttack = false;
         bodyAnimator.enabled = true;
         head.GetComponent<HeadAnimation>().isHeadIdle = true;
 
         yield return new WaitForSeconds(0.5f);
         bodyAnimator.enabled = false;
         head.GetComponent<HeadAnimation>().isHeadIdle = false;
+        isAttack = true;
         leftarm.transform.DOMove(new Vector2(-6.0f, 2.0f), 0.5f).SetEase(Ease.OutCubic);
         rightarm.transform.DOMove(new Vector2(6.0f, 2.0f), 0.5f).SetEase(Ease.OutCubic);
         body.transform.DOMove(Vector2.up * 0.5f, 0.5f).SetEase(Ease.Unset);
@@ -87,8 +124,11 @@ public class Boss : MonoBehaviour
         leftarm.transform.DOMove(new Vector2(-6.0f, -2.5f), 0.5f).SetEase(Ease.OutBounce);
         rightarm.transform.DOMove(new Vector2(6.0f, -2.5f), 0.5f).SetEase(Ease.OutBounce);
         body.transform.DOMove(Vector2.down * 2, 0.5f).SetEase(Ease.Unset);
+        yield return new WaitForSeconds(0.22f);
         CameraShake.instance.smoothShakeCamera(10, 1f);
-        yield return new WaitForSeconds(0.6f);
+        if (Player.Instance.hitGround)
+            Player.Instance.Stun(1.5f);
+        yield return new WaitForSeconds(0.28f);
         leftarm.transform.DOMove(new Vector2(-6.0f, -2f), 0.3f).SetEase(Ease.Unset);
         rightarm.transform.DOMove(new Vector2(6.0f, -2f), 0.3f).SetEase(Ease.Unset);
         body.transform.DOMove(Vector2.down * 0.5f, 0.3f).SetEase(Ease.Unset);
@@ -98,6 +138,7 @@ public class Boss : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         leftarm.transform.DOMove(new Vector2(-3f, -2f), 0.5f).SetEase(Ease.Unset);
         rightarm.transform.DOMove(new Vector2(3f, -2f), 0.5f).SetEase(Ease.Unset);
+        isAttack = false;
         bodyAnimator.enabled = true;
         head.GetComponent<HeadAnimation>().isHeadIdle = true;
         CameraShake.instance.smoothShakeCamera(5, 0.5f);
@@ -110,7 +151,7 @@ public class Boss : MonoBehaviour
             StartCoroutine(SpecialAttack2());
     }
 
-    IEnumerator SpecialAttack1()
+    IEnumerator SpecialAttack1() //레이저를 한바퀴 돌림(보스의 손에 막힘)
     {
         float temp = -90;
         yield return new WaitForSeconds(1);
@@ -133,6 +174,10 @@ public class Boss : MonoBehaviour
         {
             float radian = temp * Mathf.PI / 180;
             RaycastHit2D hit = Physics2D.Raycast(Vector2.up * 0.2f, new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized, Mathf.Infinity);
+
+            if (hit.collider.CompareTag("Player"))
+                Player.Instance.Hurt(20);
+            
             Debug.DrawLine(Vector2.up * 0.2f, hit.point, Color.yellow);
             laserLineRenderer.enabled = true;
             laserLineRenderer.SetPosition(0, Vector2.down * 0.5f);
@@ -145,11 +190,11 @@ public class Boss : MonoBehaviour
         body.transform.DOMove(Vector2.zero, 1f);
         head.transform.DOMove(Vector2.up, 1f);
         yield return new WaitForSeconds(1f);
-        isAttack = false;
+        StartCoroutine(CoreOpen());
         yield return null;
     }
 
-    IEnumerator SpecialAttack2()
+    IEnumerator SpecialAttack2() //큰 화염구(막을수 없음)를 플레이어쪽으로 5개 발사
     {
         yield return new WaitForSeconds(1);
         bodyAnimator.enabled = false;
@@ -177,6 +222,8 @@ public class Boss : MonoBehaviour
         body.transform.DOMove(Vector2.zero, 1f);
         head.transform.DOMove(Vector2.up, 1f);
         yield return new WaitForSeconds(1f);
-        isAttack = false;
+        StartCoroutine(CoreOpen());
     }
+
+    
 }

@@ -8,6 +8,8 @@ TagManager:
   - Boss
   - Enemy
   - Fireball
+  - Hand
+  - Core
   layers:
   - Default
   - TransparentFX
